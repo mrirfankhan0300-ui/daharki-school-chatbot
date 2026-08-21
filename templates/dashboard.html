@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daharki School Admin Dashboard</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+
+<body class="dashboard-page">
+
+<header class="top-header">
+    <div>
+        <h2>Daharki School Admin Dashboard</h2>
+        <p>Admission Management</p>
+    </div>
+
+    <div class="header-actions">
+        <a href="/" class="secondary-btn">Admission Form</a>
+        <a href="/admin/logout" class="danger-btn">Logout</a>
+    </div>
+</header>
+
+<main class="dashboard-container">
+
+    <section class="stats-grid">
+        <div class="stat-card">
+            <span>Total Applications</span>
+            <strong>{{ total }}</strong>
+        </div>
+        <div class="stat-card">
+            <span>Pending</span>
+            <strong>{{ pending }}</strong>
+        </div>
+        <div class="stat-card">
+            <span>Approved</span>
+            <strong>{{ approved }}</strong>
+        </div>
+        <div class="stat-card">
+            <span>Rejected</span>
+            <strong>{{ rejected }}</strong>
+        </div>
+    </section>
+
+    <section class="table-card">
+        <div class="table-heading">
+            <div>
+                <h3>Admission Applications</h3>
+                <p>View and manage submitted student applications.</p>
+            </div>
+
+            <input
+                type="text"
+                id="searchBox"
+                placeholder="Search student..."
+                onkeyup="searchTable()"
+            >
+        </div>
+
+        <div class="table-wrap">
+            <table id="admissionsTable">
+                <thead>
+                    <tr>
+                        <th>Application No</th>
+                        <th>Student</th>
+                        <th>Class</th>
+                        <th>Parent</th>
+                        <th>Phone</th>
+                        <th>Status</th>
+                        <th>Submitted</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                {% for a in admissions %}
+                    <tr>
+                        <td>{{ a.application_no }}</td>
+                        <td>
+                            <strong>{{ a.student_name }}</strong><br>
+                            <small>{{ a.email or "" }}</small>
+                        </td>
+                        <td>{{ a.applying_class }}</td>
+                        <td>{{ a.father_name }}</td>
+                        <td>{{ a.phone }}</td>
+                        <td>
+                            <span class="status {{ a.status|lower }}">
+                                {{ a.status }}
+                            </span>
+                        </td>
+                        <td>
+                            {{ a.created_at.strftime("%d-%m-%Y %I:%M %p") if a.created_at else "" }}
+                        </td>
+                        <td class="actions">
+                            <button
+                                class="view-btn"
+                                onclick='showDetails(
+                                    {{ a.id }},
+                                    {{ a.application_no|tojson }},
+                                    {{ a.student_name|tojson }},
+                                    {{ a.father_name|tojson }},
+                                    {{ (a.mother_name or "")|tojson }},
+                                    {{ (a.date_of_birth or "")|tojson }},
+                                    {{ (a.gender or "")|tojson }},
+                                    {{ a.applying_class|tojson }},
+                                    {{ (a.previous_school or "")|tojson }},
+                                    {{ (a.parent_cnic or "")|tojson }},
+                                    {{ a.phone|tojson }},
+                                    {{ (a.whatsapp or "")|tojson }},
+                                    {{ (a.email or "")|tojson }},
+                                    {{ (a.address or "")|tojson }},
+                                    {{ a.status|tojson }}
+                                )'
+                            >
+                                View
+                            </button>
+
+                            {% if a.status != "APPROVED" %}
+                            <form action="/admin/admissions/{{ a.id }}/approve" method="post">
+                                <button class="approve-btn" type="submit">
+                                    Approve
+                                </button>
+                            </form>
+                            {% endif %}
+
+                            {% if a.status != "REJECTED" %}
+                            <form action="/admin/admissions/{{ a.id }}/reject" method="post">
+                                <button class="reject-btn" type="submit">
+                                    Reject
+                                </button>
+                            </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="8" class="empty">
+                            No admission applications yet.
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+</main>
+
+<div id="detailsModal" class="modal hidden">
+    <div class="modal-card">
+        <div class="modal-header">
+            <h3>Student Application Details</h3>
+            <button onclick="closeModal()">×</button>
+        </div>
+
+        <div id="detailsContent" class="details-grid"></div>
+    </div>
+</div>
+
+<script>
+function searchTable() {
+    const query = document.getElementById("searchBox").value.toLowerCase();
+    const rows = document.querySelectorAll("#admissionsTable tbody tr");
+
+    rows.forEach(row => {
+        row.style.display = row.innerText.toLowerCase().includes(query)
+            ? ""
+            : "none";
+    });
+}
+
+function escapeHtml(value) {
+    return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+}
+
+function showDetails(
+    id, applicationNo, studentName, fatherName, motherName,
+    dob, gender, applyingClass, previousSchool, cnic, phone,
+    whatsapp, email, address, status
+) {
+    const data = [
+        ["Application No", applicationNo],
+        ["Student Name", studentName],
+        ["Father Name", fatherName],
+        ["Mother Name", motherName],
+        ["Date of Birth", dob],
+        ["Gender", gender],
+        ["Applying Class", applyingClass],
+        ["Previous School", previousSchool],
+        ["Parent CNIC", cnic],
+        ["Phone", phone],
+        ["WhatsApp", whatsapp],
+        ["Email", email],
+        ["Address", address],
+        ["Status", status]
+    ];
+
+    document.getElementById("detailsContent").innerHTML =
+        data.map(item => `
+            <div class="detail-item">
+                <label>${escapeHtml(item[0])}</label>
+                <p>${escapeHtml(item[1]) || "-"}</p>
+            </div>
+        `).join("");
+
+    document.getElementById("detailsModal").classList.remove("hidden");
+}
+
+function closeModal() {
+    document.getElementById("detailsModal").classList.add("hidden");
+}
+</script>
+
+</body>
+</html>
