@@ -19,16 +19,17 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: "3.12"
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install -r requirements.txt \
+            --target="./.python_packages/lib/site-packages"
 
-      - name: Verify SQLAlchemy
+      - name: Verify dependencies
         run: |
-          python -c "import sqlalchemy; print(sqlalchemy.__version__)"
+          python -c "import sqlalchemy, requests; print('Dependencies OK')"
 
       - name: Create deployment package
         run: |
@@ -37,7 +38,8 @@ jobs:
             -x ".github/*" \
             -x "antenv/*" \
             -x "venv/*" \
-            -x "__pycache__/*"
+            -x "__pycache__/*" \
+            -x "release.zip"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
