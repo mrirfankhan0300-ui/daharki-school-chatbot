@@ -26,17 +26,24 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Verify SQLAlchemy
+        run: |
+          python -c "import sqlalchemy; print(sqlalchemy.__version__)"
+
+      - name: Create deployment package
+        run: |
+          zip -r release.zip . \
+            -x ".git/*" \
+            -x ".github/*" \
+            -x "antenv/*" \
+            -x "venv/*" \
+            -x "__pycache__/*"
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: python-app
-          path: |
-            .
-            !.git/
-            !.github/
-            !antenv/
-            !venv/
-            !__pycache__/
+          path: release.zip
 
   deploy:
     runs-on: ubuntu-latest
@@ -51,6 +58,7 @@ jobs:
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
-          app-name: 'daharki-school-admission'
-          slot-name: 'Production'
+          app-name: daharki-school-admission
+          slot-name: Production
+          package: release.zip
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_D9F3F3B024234E64AC8F38CF0D1AF56E }}
