@@ -26,6 +26,11 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -r requirements.txt
 
+      - name: Create deployment configuration
+        run: |
+          printf "[config]\nSCM_BUILD_ARGS=--platform python --platform-version 3.12\n" > .deployment
+          echo "python-3.12" > runtime.txt
+
       - name: Create deployment package
         run: |
           zip -r release.zip . \
