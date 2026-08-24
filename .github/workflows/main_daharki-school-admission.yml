@@ -25,7 +25,6 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install -r requirements.txt
-          python -m pip install --target .python_packages/lib/site-packages -r requirements.txt
 
       - name: Create deployment package
         run: |
@@ -35,6 +34,7 @@ jobs:
             -x "venv/*" \
             -x "antenv/*" \
             -x "__pycache__/*" \
+            -x ".python_packages/*" \
             -x "release.zip"
 
       - name: Upload artifact
