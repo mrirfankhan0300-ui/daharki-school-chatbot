@@ -1,4 +1,4 @@
-name: Build and deploy Python app to Azure Web App - daharki-school-admission
+name: Deploy Python App to Azure
 
 on:
   push:
@@ -16,7 +16,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Python
+      - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -24,20 +24,16 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt \
-            --target="./.python_packages/lib/site-packages"
-
-      - name: Verify dependencies
-        run: |
-          python -c "import sqlalchemy, requests; print('Dependencies OK')"
+          python -m pip install -r requirements.txt
+          python -m pip install --target .python_packages/lib/site-packages -r requirements.txt
 
       - name: Create deployment package
         run: |
           zip -r release.zip . \
             -x ".git/*" \
             -x ".github/*" \
-            -x "antenv/*" \
             -x "venv/*" \
+            -x "antenv/*" \
             -x "__pycache__/*" \
             -x "release.zip"
 
@@ -57,7 +53,7 @@ jobs:
         with:
           name: python-app
 
-      - name: Deploy to Azure Web App
+      - name: Deploy to Azure
         uses: azure/webapps-deploy@v3
         with:
           app-name: daharki-school-admission
