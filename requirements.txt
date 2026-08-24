@@ -7,3 +7,4 @@ passlib
 bcrypt
 SQLAlchemy
 requests
+psycopg[binary]
