@@ -1,8 +1,9 @@
 fastapi
-uvicorn
+uvicorn[standard]
 gunicorn
 jinja2
 python-multipart
 passlib
 bcrypt
 SQLAlchemy
+requests
