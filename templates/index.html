@@ -15,8 +15,8 @@
     <div class="container admission-card">
 
         <!-- =====================================================
-         SCHOOL BRAND
-    ====================================================== -->
+             SCHOOL BRAND
+        ====================================================== -->
 
         <div class="brand">
 
@@ -33,8 +33,8 @@
 
 
         <!-- =====================================================
-         ADMISSION FORM
-    ====================================================== -->
+             ADMISSION FORM
+        ====================================================== -->
 
         <form id="admissionForm">
 
@@ -166,7 +166,7 @@
             </div>
 
 
-            <!-- CNIC + Phone -->
+            <!-- Parent CNIC + Student CNIC -->
 
             <div class="form-row">
 
@@ -184,6 +184,23 @@
                 <div class="form-group">
 
                     <label>
+                        Student CNIC / B-Form
+                    </label>
+
+                    <input type="text" id="student_cnic" placeholder="42101-1234567-1">
+
+                </div>
+
+            </div>
+
+
+            <!-- Phone + WhatsApp -->
+
+            <div class="form-row">
+
+                <div class="form-group">
+
+                    <label>
                         Parent Phone *
                     </label>
 
@@ -191,12 +208,6 @@
 
                 </div>
 
-            </div>
-
-
-            <!-- WhatsApp + Email -->
-
-            <div class="form-row">
 
                 <div class="form-group">
 
@@ -204,20 +215,22 @@
                         WhatsApp Number
                     </label>
 
-                    <input type="tel" id="whatsapp">
+                    <input type="tel" id="whatsapp" placeholder="03001234567">
 
                 </div>
 
+            </div>
 
-                <div class="form-group">
 
-                    <label>
-                        Email
-                    </label>
+            <!-- Email -->
 
-                    <input type="email" id="email">
+            <div class="form-group">
 
-                </div>
+                <label>
+                    Email
+                </label>
+
+                <input type="email" id="email" placeholder="parent@example.com">
 
             </div>
 
@@ -245,15 +258,15 @@
 
 
         <!-- =====================================================
-         RESULT
-    ====================================================== -->
+             RESULT
+        ====================================================== -->
 
         <div id="result"></div>
 
 
         <!-- =====================================================
-         ADMIN LOGIN
-    ====================================================== -->
+             ADMIN LOGIN
+        ====================================================== -->
 
         <div class="admin-link">
 
@@ -267,8 +280,8 @@
 
 
     <!-- =====================================================
-     JAVASCRIPT
-====================================================== -->
+         JAVASCRIPT
+    ====================================================== -->
 
     <script src="/static/js/app.js"></script>
 
