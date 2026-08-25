@@ -61,7 +61,7 @@ class Admission(Base):
         nullable=True
     )
 
-    # CNIC / B-Form Information
+    # CNIC Information
     parent_cnic = Column(
         String,
         nullable=True
@@ -99,7 +99,24 @@ class Admission(Base):
         default="PENDING"
     )
 
-    # Record Creation Time
+    # =====================================================
+    # GRADING
+    # =====================================================
+
+    grade = Column(
+        String,
+        nullable=True
+    )
+
+    # =====================================================
+    # CERTIFICATE STATUS
+    # =====================================================
+
+    certificate_status = Column(
+        String,
+        default="NOT_GENERATED"
+    )
+
     created_at = Column(
         DateTime,
         default=datetime.utcnow

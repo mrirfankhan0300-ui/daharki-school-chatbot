@@ -9,3 +9,4 @@ SQLAlchemy
 requests
 psycopg[binary]
 python-dotenv
+reportlab

@@ -11,6 +11,7 @@
         Admin Dashboard | Daharki School System
     </title>
 
+
     <style>
         * {
             box-sizing: border-box;
@@ -19,14 +20,17 @@
         body {
             margin: 0;
             font-family: Arial, sans-serif;
-            background: #f3f7fb;
+            background: #f4f7fb;
         }
 
         .header {
             background: #163d6b;
             color: white;
-            padding: 20px 30px;
+
+            padding: 18px 30px;
+
             display: flex;
+
             justify-content: space-between;
             align-items: center;
         }
@@ -37,71 +41,161 @@
         }
 
         .logout {
+            background: #dc2626;
             color: white;
+
             text-decoration: none;
-            background: #b91c1c;
-            padding: 10px 16px;
-            border-radius: 8px;
+
+            padding: 10px 18px;
+
+            border-radius: 7px;
         }
 
         .container {
-            max-width: 1400px;
+            width: 95%;
+            max-width: 1600px;
+
             margin: 30px auto;
-            padding: 0 20px;
         }
 
         .card {
             background: white;
-            border-radius: 14px;
+
             padding: 20px;
+
+            border-radius: 14px;
+
             box-shadow:
-                0 6px 25px rgba(0, 0, 0, 0.08);
+                0 5px 25px rgba(0, 0, 0, 0.08);
+
             overflow-x: auto;
         }
 
         table {
             width: 100%;
-            border-collapse: collapse;
-            min-width: 1000px;
+
+            border-collapse:
+                collapse;
+
+            min-width: 1350px;
         }
 
         th {
-            background: #edf3f9;
-            text-align: left;
+            background:
+                #eaf0f7;
+
             padding: 12px;
+
+            text-align: left;
+
+            font-size: 14px;
         }
 
         td {
-            border-bottom: 1px solid #e5e7eb;
             padding: 12px;
+
+            border-bottom:
+                1px solid #e5e7eb;
+
+            vertical-align:
+                middle;
         }
 
-        .status {
-            font-weight: bold;
-        }
-
-        select {
+        select,
+        input {
             padding: 8px;
+
+            border:
+                1px solid #cbd5e1;
+
             border-radius: 6px;
         }
 
         button {
-            padding: 8px 12px;
             border: none;
-            background: #163d6b;
-            color: white;
-            border-radius: 6px;
-            cursor: pointer;
+
+            padding:
+                8px 12px;
+
+            border-radius:
+                6px;
+
+            cursor:
+                pointer;
+
+            background:
+                #163d6b;
+
+            color:
+                white;
+        }
+
+        .certificate-btn {
+            display:
+                inline-block;
+
+            text-decoration:
+                none;
+
+            background:
+                #15803d;
+
+            color:
+                white;
+
+            padding:
+                9px 12px;
+
+            border-radius:
+                6px;
+        }
+
+        .disabled {
+            color:
+                #6b7280;
+
+            font-size:
+                13px;
+        }
+
+        .pending {
+            color:
+                #d97706;
+
+            font-weight:
+                bold;
+        }
+
+        .approved {
+            color:
+                #15803d;
+
+            font-weight:
+                bold;
+        }
+
+        .rejected {
+            color:
+                #dc2626;
+
+            font-weight:
+                bold;
         }
 
         .empty {
-            text-align: center;
-            padding: 40px;
-            color: #6b7280;
+            text-align:
+                center;
+
+            padding:
+                50px;
+
+            color:
+                #6b7280;
         }
     </style>
 
 </head>
+
 
 <body>
 
@@ -112,7 +206,8 @@
             Daharki School Admin Dashboard
         </h1>
 
-        <a class="logout" href="/api/admin/logout">
+
+        <a href="/api/admin/logout" class="logout">
             Logout
         </a>
 
@@ -121,11 +216,15 @@
 
     <div class="container">
 
+
         <div class="card">
+
 
             {% if admissions %}
 
+
             <table>
+
 
                 <thead>
 
@@ -160,7 +259,15 @@
                         </th>
 
                         <th>
-                            Action
+                            Change Status
+                        </th>
+
+                        <th>
+                            Grade
+                        </th>
+
+                        <th>
+                            Certificate
                         </th>
 
                     </tr>
@@ -170,43 +277,92 @@
 
                 <tbody>
 
+
                     {% for admission in admissions %}
+
 
                     <tr>
 
+
                         <td>
+
                             {{ admission.application_no }}
+
                         </td>
 
+
                         <td>
+
                             {{ admission.student_name }}
+
                         </td>
 
+
                         <td>
+
                             {{ admission.father_name }}
+
                         </td>
 
+
                         <td>
+
                             {{ admission.applying_class }}
+
                         </td>
 
+
                         <td>
+
                             {{ admission.phone }}
+
                         </td>
 
+
                         <td>
+
                             {{ admission.email }}
+
                         </td>
 
-                        <td class="status">
-                            {{ admission.status }}
-                        </td>
+
+                        <!-- STATUS -->
 
                         <td>
+
+                            {% if admission.status == "APPROVED" %}
+
+                            <span class="approved">
+                                APPROVED
+                            </span>
+
+                            {% elif admission.status == "REJECTED" %}
+
+                            <span class="rejected">
+                                REJECTED
+                            </span>
+
+                            {% else %}
+
+                            <span class="pending">
+                                PENDING
+                            </span>
+
+                            {% endif %}
+
+                        </td>
+
+
+                        <!-- CHANGE STATUS -->
+
+                        <td>
+
 
                             <form method="post" action="/admin/admissions/{{ admission.application_no }}/status">
 
+
                                 <select name="new_status">
+
 
                                     <option value="PENDING" {% if admission.status=="PENDING" %} selected {% endif %}>
                                         Pending
@@ -222,35 +378,151 @@
                                         Rejected
                                     </option>
 
+
                                 </select>
+
 
                                 <button type="submit">
                                     Update
                                 </button>
 
+
                             </form>
+
 
                         </td>
 
+
+                        <!-- GRADE -->
+
+                        <td>
+
+
+                            <form method="post" action="/admin/admissions/{{ admission.application_no }}/grade">
+
+
+                                <select name="grade">
+
+
+                                    <option value="">
+                                        Select
+                                    </option>
+
+
+                                    <option value="A+" {% if admission.grade=="A+" %} selected {% endif %}>
+                                        A+
+                                    </option>
+
+
+                                    <option value="A" {% if admission.grade=="A" %} selected {% endif %}>
+                                        A
+                                    </option>
+
+
+                                    <option value="B" {% if admission.grade=="B" %} selected {% endif %}>
+                                        B
+                                    </option>
+
+
+                                    <option value="C" {% if admission.grade=="C" %} selected {% endif %}>
+                                        C
+                                    </option>
+
+
+                                    <option value="D" {% if admission.grade=="D" %} selected {% endif %}>
+                                        D
+                                    </option>
+
+
+                                    <option value="F" {% if admission.grade=="F" %} selected {% endif %}>
+                                        F
+                                    </option>
+
+
+                                </select>
+
+
+                                <button type="submit">
+                                    Save
+                                </button>
+
+
+                            </form>
+
+
+                        </td>
+
+
+                        <!-- CERTIFICATE -->
+
+                        <td>
+
+
+                            {% if admission.status == "APPROVED" %}
+
+
+                            <a href="/admin/certificate/{{ admission.application_no }}" class="certificate-btn">
+                                Generate Certificate
+                            </a>
+
+
+                            {% if admission.certificate_status == "GENERATED" %}
+
+                            <br><br>
+
+                            <small>
+                                ✅ Generated
+                            </small>
+
+                            {% endif %}
+
+
+                            {% else %}
+
+
+                            <span class="disabled">
+
+                                Approve student first
+
+                            </span>
+
+
+                            {% endif %}
+
+
+                        </td>
+
+
                     </tr>
+
 
                     {% endfor %}
 
+
                 </tbody>
+
 
             </table>
 
+
             {% else %}
 
+
             <div class="empty">
+
                 No admission applications found.
+
             </div>
+
 
             {% endif %}
 
+
         </div>
 
+
     </div>
+
 
 </body>
 
