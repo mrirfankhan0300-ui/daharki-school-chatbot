@@ -6,11 +6,6 @@ python-multipart
 passlib
 bcrypt
 SQLAlchemy
-<<<<<<< HEAD
 requests
-psycopg[binary]
-=======
 psycopg[binary]
 python-dotenv
-requests
->>>>>>> 64015f0 (Fix database and app setup)
