@@ -1,125 +1,277 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>Daharki School Admission System</title>
+
     <link rel="stylesheet" href="/static/css/style.css">
 </head>
+
 <body class="public-page">
 
-<div class="container admission-card">
-    <div class="brand">
-        <div class="brand-badge">DSS</div>
-        <div>
-            <h1>DAHARKI SCHOOL SYSTEM</h1>
-            <p>Online Student Admission Application</p>
+    <div class="container admission-card">
+
+        <!-- =====================================================
+         SCHOOL BRAND
+    ====================================================== -->
+
+        <div class="brand">
+
+            <div class="brand-badge">
+                DSS
+            </div>
+
+            <div>
+                <h1>DAHARKI SCHOOL SYSTEM</h1>
+                <p>Online Student Admission Application</p>
+            </div>
+
         </div>
+
+
+        <!-- =====================================================
+         ADMISSION FORM
+    ====================================================== -->
+
+        <form id="admissionForm">
+
+            <!-- Student + Father Name -->
+
+            <div class="form-row">
+
+                <div class="form-group">
+                    <label>
+                        Student Full Name *
+                    </label>
+
+                    <input type="text" id="student_name" required>
+                </div>
+
+
+                <div class="form-group">
+                    <label>
+                        Father Name *
+                    </label>
+
+                    <input type="text" id="father_name" required>
+                </div>
+
+            </div>
+
+
+            <!-- Mother + DOB -->
+
+            <div class="form-row">
+
+                <div class="form-group">
+                    <label>
+                        Mother Name
+                    </label>
+
+                    <input type="text" id="mother_name">
+                </div>
+
+
+                <div class="form-group">
+                    <label>
+                        Date of Birth
+                    </label>
+
+                    <input type="date" id="date_of_birth">
+                </div>
+
+            </div>
+
+
+            <!-- Gender + Class -->
+
+            <div class="form-row">
+
+                <div class="form-group">
+
+                    <label>
+                        Gender
+                    </label>
+
+                    <select id="gender">
+
+                        <option value="">
+                            Select Gender
+                        </option>
+
+                        <option value="Male">
+                            Male
+                        </option>
+
+                        <option value="Female">
+                            Female
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>
+                        Applying Class *
+                    </label>
+
+                    <select id="applying_class" required>
+
+                        <option value="">
+                            Select Class
+                        </option>
+
+                        <option>Play Group</option>
+                        <option>Nursery</option>
+                        <option>Prep</option>
+                        <option>Class 1</option>
+                        <option>Class 2</option>
+                        <option>Class 3</option>
+                        <option>Class 4</option>
+                        <option>Class 5</option>
+                        <option>Class 6</option>
+                        <option>Class 7</option>
+                        <option>Class 8</option>
+                        <option>Class 9</option>
+                        <option>Class 10</option>
+                        <option>O Level 1</option>
+                        <option>O Level 2</option>
+                        <option>O Level 3</option>
+                        <option>A Level 1</option>
+                        <option>A Level 2</option>
+
+                    </select>
+
+                </div>
+
+            </div>
+
+
+            <!-- Previous School -->
+
+            <div class="form-group">
+
+                <label>
+                    Previous School
+                </label>
+
+                <input type="text" id="previous_school">
+
+            </div>
+
+
+            <!-- CNIC + Phone -->
+
+            <div class="form-row">
+
+                <div class="form-group">
+
+                    <label>
+                        Parent CNIC
+                    </label>
+
+                    <input type="text" id="parent_cnic" placeholder="42101-1234567-1">
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>
+                        Parent Phone *
+                    </label>
+
+                    <input type="tel" id="phone" placeholder="03001234567" required>
+
+                </div>
+
+            </div>
+
+
+            <!-- WhatsApp + Email -->
+
+            <div class="form-row">
+
+                <div class="form-group">
+
+                    <label>
+                        WhatsApp Number
+                    </label>
+
+                    <input type="tel" id="whatsapp">
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>
+                        Email
+                    </label>
+
+                    <input type="email" id="email">
+
+                </div>
+
+            </div>
+
+
+            <!-- Address -->
+
+            <div class="form-group">
+
+                <label>
+                    Home Address
+                </label>
+
+                <textarea id="address" rows="4"></textarea>
+
+            </div>
+
+
+            <!-- Submit -->
+
+            <button type="submit" class="primary-btn">
+                Submit Admission Application
+            </button>
+
+        </form>
+
+
+        <!-- =====================================================
+         RESULT
+    ====================================================== -->
+
+        <div id="result"></div>
+
+
+        <!-- =====================================================
+         ADMIN LOGIN
+    ====================================================== -->
+
+        <div class="admin-link">
+
+            <a href="/admin/login">
+                Admin Login
+            </a>
+
+        </div>
+
     </div>
 
-    <form id="admissionForm">
-        <div class="form-row">
-            <div class="form-group">
-                <label>Student Full Name *</label>
-                <input type="text" id="student_name" required>
-            </div>
-            <div class="form-group">
-                <label>Father Name *</label>
-                <input type="text" id="father_name" required>
-            </div>
-        </div>
 
-        <div class="form-row">
-            <div class="form-group">
-                <label>Mother Name</label>
-                <input type="text" id="mother_name">
-            </div>
-            <div class="form-group">
-                <label>Date of Birth</label>
-                <input type="date" id="date_of_birth">
-            </div>
-        </div>
+    <!-- =====================================================
+     JAVASCRIPT
+====================================================== -->
 
-        <div class="form-row">
-            <div class="form-group">
-                <label>Gender</label>
-                <select id="gender">
-                    <option value="">Select Gender</option>
-                    <option>Male</option>
-                    <option>Female</option>
-                </select>
-            </div>
+    <script src="/static/js/app.js"></script>
 
-            <div class="form-group">
-                <label>Applying Class *</label>
-                <select id="applying_class" required>
-                    <option value="">Select Class</option>
-                    <option>Play Group</option>
-                    <option>Nursery</option>
-                    <option>Prep</option>
-                    <option>Class 1</option>
-                    <option>Class 2</option>
-                    <option>Class 3</option>
-                    <option>Class 4</option>
-                    <option>Class 5</option>
-                    <option>Class 6</option>
-                    <option>Class 7</option>
-                    <option>Class 8</option>
-                    <option>Class 9</option>
-                    <option>Class 10</option>
-                    <option>O Level 1</option>
-                    <option>O Level 2</option>
-                    <option>O Level 3</option>
-                    <option>A Level 1</option>
-                    <option>A Level 2</option>
-                </select>
-            </div>
-        </div>
-
-        <div class="form-group">
-            <label>Previous School</label>
-            <input type="text" id="previous_school">
-        </div>
-
-        <div class="form-row">
-            <div class="form-group">
-                <label>Parent CNIC</label>
-                <input type="text" id="parent_cnic" placeholder="42101-1234567-1">
-            </div>
-            <div class="form-group">
-                <label>Parent Phone *</label>
-                <input type="tel" id="phone" placeholder="03001234567" required>
-            </div>
-        </div>
-
-        <div class="form-row">
-            <div class="form-group">
-                <label>WhatsApp Number</label>
-                <input type="tel" id="whatsapp">
-            </div>
-            <div class="form-group">
-                <label>Email</label>
-                <input type="email" id="email">
-            </div>
-        </div>
-
-        <div class="form-group">
-            <label>Home Address</label>
-            <textarea id="address" rows="4"></textarea>
-        </div>
-
-        <button type="submit" class="primary-btn">
-            Submit Admission Application
-        </button>
-    </form>
-
-    <div id="result"></div>
-
-    <div class="admin-link">
-        <a href="/admin">Admin Login</a>
-    </div>
-</div>
-
-<script src="/static/js/app.js"></script>
 </body>
+
 </html>
