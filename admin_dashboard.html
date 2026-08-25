@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>
+        Admin Dashboard | Daharki School System
+    </title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f3f7fb;
+        }
+
+        .header {
+            background: #163d6b;
+            color: white;
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+
+        .logout {
+            color: white;
+            text-decoration: none;
+            background: #b91c1c;
+            padding: 10px 16px;
+            border-radius: 8px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 14px;
+            padding: 20px;
+            box-shadow:
+                0 6px 25px rgba(0, 0, 0, 0.08);
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 1000px;
+        }
+
+        th {
+            background: #edf3f9;
+            text-align: left;
+            padding: 12px;
+        }
+
+        td {
+            border-bottom: 1px solid #e5e7eb;
+            padding: 12px;
+        }
+
+        .status {
+            font-weight: bold;
+        }
+
+        select {
+            padding: 8px;
+            border-radius: 6px;
+        }
+
+        button {
+            padding: 8px 12px;
+            border: none;
+            background: #163d6b;
+            color: white;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .empty {
+            text-align: center;
+            padding: 40px;
+            color: #6b7280;
+        }
+    </style>
+
+</head>
+
+<body>
+
+
+    <div class="header">
+
+        <h1>
+            Daharki School Admin Dashboard
+        </h1>
+
+        <a class="logout" href="/api/admin/logout">
+            Logout
+        </a>
+
+    </div>
+
+
+    <div class="container">
+
+        <div class="card">
+
+            {% if admissions %}
+
+            <table>
+
+                <thead>
+
+                    <tr>
+
+                        <th>
+                            Application No
+                        </th>
+
+                        <th>
+                            Student
+                        </th>
+
+                        <th>
+                            Father
+                        </th>
+
+                        <th>
+                            Class
+                        </th>
+
+                        <th>
+                            Phone
+                        </th>
+
+                        <th>
+                            Email
+                        </th>
+
+                        <th>
+                            Status
+                        </th>
+
+                        <th>
+                            Action
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody>
+
+                    {% for admission in admissions %}
+
+                    <tr>
+
+                        <td>
+                            {{ admission.application_no }}
+                        </td>
+
+                        <td>
+                            {{ admission.student_name }}
+                        </td>
+
+                        <td>
+                            {{ admission.father_name }}
+                        </td>
+
+                        <td>
+                            {{ admission.applying_class }}
+                        </td>
+
+                        <td>
+                            {{ admission.phone }}
+                        </td>
+
+                        <td>
+                            {{ admission.email }}
+                        </td>
+
+                        <td class="status">
+                            {{ admission.status }}
+                        </td>
+
+                        <td>
+
+                            <form method="post" action="/admin/admissions/{{ admission.application_no }}/status">
+
+                                <select name="new_status">
+
+                                    <option value="PENDING" {% if admission.status=="PENDING" %} selected {% endif %}>
+                                        Pending
+                                    </option>
+
+
+                                    <option value="APPROVED" {% if admission.status=="APPROVED" %} selected {% endif %}>
+                                        Approved
+                                    </option>
+
+
+                                    <option value="REJECTED" {% if admission.status=="REJECTED" %} selected {% endif %}>
+                                        Rejected
+                                    </option>
+
+                                </select>
+
+                                <button type="submit">
+                                    Update
+                                </button>
+
+                            </form>
+
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+            {% else %}
+
+            <div class="empty">
+                No admission applications found.
+            </div>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+</body>
+
+</html>
