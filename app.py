@@ -1,9 +1,13 @@
+
+
 from datetime import datetime
 from io import BytesIO
 
 import os
+print("🚀 RUNNING APP FILE:", os.path.abspath(__file__))
 import secrets
 import requests
+import qrcode
 
 from dotenv import load_dotenv
 
@@ -30,7 +34,7 @@ from pydantic import BaseModel
 
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4
-from reportlab.lib.units import inch
+from reportlab.lib.utils import ImageReader
 
 from database import engine, get_db
 from models import Base, Admission, Admin
@@ -56,6 +60,19 @@ ADMIN_PASSWORD = os.getenv(
     "ADMIN_PASSWORD",
     "admin123"
 )
+
+# IMPORTANT:
+# Local development:
+# http://127.0.0.1:8000
+#
+# Live deployment:
+# https://your-project.vercel.app
+# OR your Render / Railway / custom domain
+
+BASE_URL = os.getenv(
+    "BASE_URL",
+    "http://127.0.0.1:8000"
+).rstrip("/")
 
 
 # =========================================================
@@ -128,7 +145,7 @@ update_database_schema()
 
 app = FastAPI(
     title="Daharki School Admission System",
-    version="2.0.0"
+    version="3.0.0"
 )
 
 
@@ -626,7 +643,13 @@ def admin_login(
 
         httponly=True,
 
-        secure=True,
+        # Localhost testing mein agar login issue aaye:
+        # secure=False
+        #
+        # Live HTTPS deployment mein:
+        # secure=True
+
+        secure=False,
 
         samesite="lax",
 
@@ -843,7 +866,106 @@ def save_grade(
 
 
 # =========================================================
-# CERTIFICATE GENERATOR
+# PUBLIC CERTIFICATE VERIFICATION
+# =========================================================
+
+@app.get(
+    "/verify/{application_no}"
+)
+def verify_certificate(
+
+    application_no: str,
+
+    request: Request,
+
+    db: Session = Depends(
+        get_db
+    )
+):
+
+    admission = (
+
+        db.query(Admission)
+
+        .filter(
+            Admission.application_no
+            == application_no
+        )
+
+        .first()
+    )
+
+
+    # -----------------------------------------
+    # CERTIFICATE NOT FOUND
+    # -----------------------------------------
+
+    if not admission:
+
+        return templates.TemplateResponse(
+
+            request=request,
+
+            name="verify_certificate.html",
+
+            context={
+                "valid": False,
+                "admission": None,
+                "message":
+                    "Certificate record not found."
+            }
+        )
+
+
+    # -----------------------------------------
+    # CHECK VALIDITY
+    # -----------------------------------------
+
+    valid = (
+
+        admission.status == "APPROVED"
+
+        and
+
+        admission.certificate_status
+        == "GENERATED"
+    )
+
+
+    message = (
+
+        "This certificate is valid and verified."
+
+        if valid
+
+        else
+
+        "This certificate is not currently valid."
+    )
+
+
+    return templates.TemplateResponse(
+
+        request=request,
+
+        name="verify_certificate.html",
+
+        context={
+
+            "valid":
+                valid,
+
+            "admission":
+                admission,
+
+            "message":
+                message
+        }
+    )
+
+
+# =========================================================
+# CERTIFICATE GENERATOR WITH QR CODE
 # =========================================================
 
 @app.get(
@@ -913,9 +1035,73 @@ def generate_certificate(
         )
 
 
-    # -----------------------------------------
+    # =====================================================
+    # UPDATE STATUS BEFORE MAKING QR
+    # =====================================================
+
+    admission.certificate_status = (
+        "GENERATED"
+    )
+
+    db.commit()
+
+
+    # =====================================================
+    # CERTIFICATE VERIFICATION URL
+    # =====================================================
+
+    verification_url = (
+
+        f"{BASE_URL}/verify/"
+        f"{admission.application_no}"
+    )
+
+
+    # =====================================================
+    # GENERATE QR CODE
+    # =====================================================
+
+    qr = qrcode.QRCode(
+
+        version=1,
+
+        error_correction=
+            qrcode.constants.ERROR_CORRECT_M,
+
+        box_size=10,
+
+        border=4
+    )
+
+
+    qr.add_data(
+        verification_url
+    )
+
+    qr.make(
+        fit=True
+    )
+
+
+    qr_image = qr.make_image(
+        fill_color="black",
+        back_color="white"
+    )
+
+
+    qr_buffer = BytesIO()
+
+    qr_image.save(
+        qr_buffer,
+        format="PNG"
+    )
+
+    qr_buffer.seek(0)
+
+
+    # =====================================================
     # PDF MEMORY BUFFER
-    # -----------------------------------------
+    # =====================================================
 
     buffer = BytesIO()
 
@@ -929,9 +1115,9 @@ def generate_certificate(
     width, height = A4
 
 
-    # -----------------------------------------
+    # =====================================================
     # CERTIFICATE BORDER
-    # -----------------------------------------
+    # =====================================================
 
     pdf.setLineWidth(4)
 
@@ -953,9 +1139,9 @@ def generate_certificate(
     )
 
 
-    # -----------------------------------------
+    # =====================================================
     # HEADER
-    # -----------------------------------------
+    # =====================================================
 
     pdf.setFont(
         "Helvetica-Bold",
@@ -981,9 +1167,9 @@ def generate_certificate(
     )
 
 
-    # -----------------------------------------
-    # CERTIFICATE BODY
-    # -----------------------------------------
+    # =====================================================
+    # BODY
+    # =====================================================
 
     pdf.setFont(
         "Helvetica",
@@ -997,6 +1183,10 @@ def generate_certificate(
     )
 
 
+    # -----------------------------------------
+    # STUDENT NAME
+    # -----------------------------------------
+
     pdf.setFont(
         "Helvetica-Bold",
         24
@@ -1008,6 +1198,10 @@ def generate_certificate(
         admission.student_name
     )
 
+
+    # -----------------------------------------
+    # FATHER NAME
+    # -----------------------------------------
 
     pdf.setFont(
         "Helvetica",
@@ -1021,12 +1215,20 @@ def generate_certificate(
     )
 
 
+    # -----------------------------------------
+    # CLASS
+    # -----------------------------------------
+
     pdf.drawCentredString(
         width / 2,
         height - 375,
         f"Class: {admission.applying_class}"
     )
 
+
+    # -----------------------------------------
+    # GRADE
+    # -----------------------------------------
 
     grade = (
         admission.grade
@@ -1047,6 +1249,10 @@ def generate_certificate(
     )
 
 
+    # -----------------------------------------
+    # APPLICATION NUMBER
+    # -----------------------------------------
+
     pdf.setFont(
         "Helvetica",
         12
@@ -1059,6 +1265,10 @@ def generate_certificate(
     )
 
 
+    # -----------------------------------------
+    # ISSUE DATE
+    # -----------------------------------------
+
     pdf.drawCentredString(
         width / 2,
         height - 510,
@@ -1066,9 +1276,74 @@ def generate_certificate(
     )
 
 
+    # =====================================================
+    # QR CODE
+    # =====================================================
+
+    qr_size = 85
+
+    qr_x = 70
+
+    qr_y = 105
+
+
+    pdf.drawImage(
+
+        ImageReader(
+            qr_buffer
+        ),
+
+        qr_x,
+
+        qr_y,
+
+        width=qr_size,
+
+        height=qr_size,
+
+        preserveAspectRatio=True,
+
+        mask="auto"
+    )
+
+
     # -----------------------------------------
-    # SIGNATURE
+    # QR LABEL
     # -----------------------------------------
+
+    pdf.setFont(
+        "Helvetica-Bold",
+        8
+    )
+
+    pdf.drawCentredString(
+
+        qr_x + qr_size / 2,
+
+        qr_y - 12,
+
+        "SCAN TO VERIFY"
+    )
+
+
+    pdf.setFont(
+        "Helvetica",
+        6
+    )
+
+    pdf.drawCentredString(
+
+        qr_x + qr_size / 2,
+
+        qr_y - 22,
+
+        "Official Certificate Verification"
+    )
+
+
+    # =====================================================
+    # PRINCIPAL SIGNATURE
+    # =====================================================
 
     pdf.line(
         width - 200,
@@ -1078,6 +1353,11 @@ def generate_certificate(
     )
 
 
+    pdf.setFont(
+        "Helvetica",
+        10
+    )
+
     pdf.drawCentredString(
         width - 140,
         150,
@@ -1085,16 +1365,36 @@ def generate_certificate(
     )
 
 
+    # =====================================================
+    # SCHOOL NAME
+    # =====================================================
+
     pdf.drawCentredString(
-        140,
-        150,
+        width / 2,
+        75,
         "Daharki School System"
     )
 
 
-    # -----------------------------------------
+    # =====================================================
+    # CERTIFICATE ID
+    # =====================================================
+
+    pdf.setFont(
+        "Helvetica",
+        7
+    )
+
+    pdf.drawCentredString(
+        width / 2,
+        60,
+        f"Certificate ID: {admission.application_no}"
+    )
+
+
+    # =====================================================
     # COMPLETE PDF
-    # -----------------------------------------
+    # =====================================================
 
     pdf.showPage()
 
@@ -1104,22 +1404,19 @@ def generate_certificate(
     buffer.seek(0)
 
 
-    # -----------------------------------------
-    # UPDATE CERTIFICATE STATUS
-    # -----------------------------------------
-
-    admission.certificate_status = (
-        "GENERATED"
-    )
-
-    db.commit()
-
+    # =====================================================
+    # FILE NAME
+    # =====================================================
 
     filename = (
         f"{admission.application_no}"
         f"_certificate.pdf"
     )
 
+
+    # =====================================================
+    # DOWNLOAD PDF
+    # =====================================================
 
     return StreamingResponse(
 

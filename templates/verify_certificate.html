@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>
+        Certificate Verification | Daharki School System
+    </title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+
+        body {
+
+            font-family:
+                Arial,
+                Helvetica,
+                sans-serif;
+
+            background:
+                #f4faf7;
+
+            min-height: 100vh;
+
+            display: flex;
+
+            justify-content: center;
+
+            align-items: center;
+
+            padding: 30px;
+        }
+
+
+        .card {
+
+            background: white;
+
+            width: 100%;
+
+            max-width: 650px;
+
+            border-radius: 20px;
+
+            padding: 40px;
+
+            box-shadow:
+                0 15px 45px rgba(0, 0, 0, 0.10);
+
+            text-align: center;
+        }
+
+
+        .logo {
+
+            width: 80px;
+
+            height: 80px;
+
+            border-radius: 50%;
+
+            background:
+                #dff7eb;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            margin:
+                0 auto 20px;
+
+            font-size: 35px;
+        }
+
+
+        h1 {
+
+            color:
+                #173b2d;
+
+            font-size: 27px;
+
+            margin-bottom:
+                8px;
+        }
+
+
+        .school-name {
+
+            color:
+                #64756d;
+
+            margin-bottom:
+                30px;
+        }
+
+
+        .status {
+
+            padding:
+                15px 20px;
+
+            border-radius:
+                12px;
+
+            font-weight:
+                bold;
+
+            margin-bottom:
+                30px;
+
+            font-size:
+                18px;
+        }
+
+
+        .valid {
+
+            background:
+                #dcfce7;
+
+            color:
+                #166534;
+
+            border:
+                1px solid #86efac;
+        }
+
+
+        .invalid {
+
+            background:
+                #fee2e2;
+
+            color:
+                #991b1b;
+
+            border:
+                1px solid #fca5a5;
+        }
+
+
+        .details {
+
+            text-align:
+                left;
+
+            background:
+                #f8fbf9;
+
+            border:
+                1px solid #e1ebe6;
+
+            border-radius:
+                15px;
+
+            overflow:
+                hidden;
+        }
+
+
+        .row {
+
+            display:
+                flex;
+
+            justify-content:
+                space-between;
+
+            gap:
+                20px;
+
+            padding:
+                16px 20px;
+
+            border-bottom:
+                1px solid #e6ece9;
+        }
+
+
+        .row:last-child {
+
+            border-bottom:
+                none;
+        }
+
+
+        .label {
+
+            color:
+                #687871;
+
+            font-weight:
+                600;
+        }
+
+
+        .value {
+
+            color:
+                #173b2d;
+
+            font-weight:
+                bold;
+
+            text-align:
+                right;
+        }
+
+
+        .footer {
+
+            margin-top:
+                30px;
+
+            color:
+                #7b8983;
+
+            font-size:
+                13px;
+        }
+
+
+        .verified-icon {
+
+            font-size:
+                50px;
+
+            margin-bottom:
+                15px;
+        }
+
+
+        @media (max-width: 600px) {
+
+            body {
+
+                padding:
+                    15px;
+            }
+
+
+            .card {
+
+                padding:
+                    25px 18px;
+            }
+
+
+            .row {
+
+                flex-direction:
+                    column;
+
+                gap:
+                    6px;
+            }
+
+
+            .value {
+
+                text-align:
+                    left;
+            }
+
+        }
+    </style>
+
+</head>
+
+
+<body>
+
+
+    <div class="card">
+
+
+        <div class="logo">
+
+            🎓
+
+        </div>
+
+
+        <h1>
+
+            Certificate Verification
+
+        </h1>
+
+
+        <p class="school-name">
+
+            Daharki School System
+
+        </p>
+
+
+        {% if valid %}
+
+
+        <div class="verified-icon">
+
+            ✅
+
+        </div>
+
+
+        <div class="status valid">
+
+            VERIFIED CERTIFICATE
+
+        </div>
+
+
+        <div class="details">
+
+
+            <div class="row">
+
+                <span class="label">
+
+                    Student Name
+
+                </span>
+
+                <span class="value">
+
+                    {{ admission.student_name }}
+
+                </span>
+
+            </div>
+
+
+            <div class="row">
+
+                <span class="label">
+
+                    Father Name
+
+                </span>
+
+                <span class="value">
+
+                    {{ admission.father_name }}
+
+                </span>
+
+            </div>
+
+
+            <div class="row">
+
+                <span class="label">
+
+                    Class
+
+                </span>
+
+                <span class="value">
+
+                    {{ admission.applying_class }}
+
+                </span>
+
+            </div>
+
+
+            <div class="row">
+
+                <span class="label">
+
+                    Grade
+
+                </span>
+
+                <span class="value">
+
+                    {% if admission.grade %}
+
+                    {{ admission.grade }}
+
+                    {% else %}
+
+                    Not Assigned
+
+                    {% endif %}
+
+                </span>
+
+            </div>
+
+
+            <div class="row">
+
+                <span class="label">
+
+                    Application No
+
+                </span>
+
+                <span class="value">
+
+                    {{ admission.application_no }}
+
+                </span>
+
+            </div>
+
+
+            <div class="row">
+
+                <span class="label">
+
+                    Admission Status
+
+                </span>
+
+                <span class="value">
+
+                    {{ admission.status }}
+
+                </span>
+
+            </div>
+
+
+            <div class="row">
+
+                <span class="label">
+
+                    Certificate Status
+
+                </span>
+
+                <span class="value">
+
+                    {{ admission.certificate_status }}
+
+                </span>
+
+            </div>
+
+
+        </div>
+
+
+        <div class="footer">
+
+            This certificate has been verified
+            from the official Daharki School System database.
+
+        </div>
+
+
+        {% else %}
+
+
+        <div class="verified-icon">
+
+            ❌
+
+        </div>
+
+
+        <div class="status invalid">
+
+            CERTIFICATE NOT VERIFIED
+
+        </div>
+
+
+        <p>
+
+            {{ message }}
+
+        </p>
+
+
+        {% if admission %}
+
+        <div class="details" style="margin-top: 25px;">
+
+
+            <div class="row">
+
+                <span class="label">
+
+                    Application No
+
+                </span>
+
+                <span class="value">
+
+                    {{ admission.application_no }}
+
+                </span>
+
+            </div>
+
+
+            <div class="row">
+
+                <span class="label">
+
+                    Current Status
+
+                </span>
+
+                <span class="value">
+
+                    {{ admission.status }}
+
+                </span>
+
+            </div>
+
+
+        </div>
+
+        {% endif %}
+
+
+        <div class="footer">
+
+            Please contact Daharki School System
+            if you believe this is an error.
+
+        </div>
+
+
+        {% endif %}
+
+
+    </div>
+
+
+</body>
+
+</html>
