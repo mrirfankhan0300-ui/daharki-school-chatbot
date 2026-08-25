@@ -1,25 +1,37 @@
-from fastapi import FastAPI, Request, Depends, HTTPException, Form
+from datetime import datetime
+import os
+import secrets
+
+import requests
+
+from dotenv import load_dotenv
+
+from fastapi import (
+    FastAPI,
+    Request,
+    Depends,
+    HTTPException,
+    Form,
+    status
+)
+
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 
 from sqlalchemy.orm import Session
+
 from pydantic import BaseModel
 
-from datetime import datetime
-
-import secrets
-import os
-import requests
-
-from dotenv import load_dotenv
-
 from database import engine, get_db
+
+# IMPORTANT:
+# File name model.py hai, is liye "from model" use ho raha hai.
 from models import Base, Admission, Admin
 
 
 # =========================================================
-# ENV SETTINGS
+# ENVIRONMENT VARIABLES
 # =========================================================
 
 load_dotenv()
@@ -31,23 +43,51 @@ N8N_WEBHOOK_URL = os.getenv(
 
 
 # =========================================================
-# DATABASE
+# CREATE REQUIRED FOLDERS
 # =========================================================
 
-Base.metadata.create_all(bind=engine)
+os.makedirs(
+    "static",
+    exist_ok=True
+)
+
+os.makedirs(
+    "templates",
+    exist_ok=True
+)
 
 
 # =========================================================
-# FASTAPI APP
+# DATABASE TABLES
+# =========================================================
+
+Base.metadata.create_all(
+    bind=engine
+)
+
+
+# =========================================================
+# FASTAPI APPLICATION
 # =========================================================
 
 app = FastAPI(
-    title="Daharki School Admission System"
+    title="Daharki School Admission System",
+    version="1.0.0"
 )
+
+
+# =========================================================
+# TEMPLATES
+# =========================================================
 
 templates = Jinja2Templates(
     directory="templates"
 )
+
+
+# =========================================================
+# STATIC FILES
+# =========================================================
 
 app.mount(
     "/static",
@@ -57,14 +97,14 @@ app.mount(
 
 
 # =========================================================
-# ADMIN SESSION
+# ADMIN SESSION STORAGE
 # =========================================================
 
 ADMIN_SESSIONS = set()
 
 
 # =========================================================
-# PYDANTIC MODEL
+# PYDANTIC MODELS
 # =========================================================
 
 class AdmissionCreate(BaseModel):
@@ -73,19 +113,30 @@ class AdmissionCreate(BaseModel):
     father_name: str
 
     mother_name: str | None = None
+
     date_of_birth: str | None = None
+
     gender: str | None = None
 
     applying_class: str
 
     previous_school: str | None = None
+
     parent_cnic: str | None = None
+
+    student_cnic: str | None = None
 
     phone: str
 
     whatsapp: str | None = None
+
     email: str | None = None
+
     address: str | None = None
+
+
+class StatusUpdate(BaseModel):
+    status: str
 
 
 # =========================================================
@@ -97,8 +148,7 @@ def ensure_default_admin(db: Session):
     admin = (
         db.query(Admin)
         .filter(
-            Admin.email ==
-            "admin@daharkischool.edu.pk"
+            Admin.email == "admin@daharkischool.edu.pk"
         )
         .first()
     )
@@ -113,6 +163,27 @@ def ensure_default_admin(db: Session):
 
         db.add(admin)
         db.commit()
+
+        print("✅ Default admin created")
+
+    else:
+        print("✅ Default admin already exists")
+
+
+# =========================================================
+# STARTUP EVENT
+# =========================================================
+
+@app.on_event("startup")
+def startup_event():
+
+    db = next(get_db())
+
+    try:
+        ensure_default_admin(db)
+
+    finally:
+        db.close()
 
 
 # =========================================================
@@ -144,7 +215,10 @@ def home(
     return templates.TemplateResponse(
         request=request,
         name="index.html",
-        context={}
+        context={
+            "admin_logged_in":
+                admin_is_logged_in(request)
+        }
     )
 
 
@@ -168,15 +242,15 @@ def health():
 
 @app.post("/api/admissions")
 def create_admission(
-
     admission_data: AdmissionCreate,
-
     db: Session = Depends(get_db)
-
 ):
 
-    # Last admission record
-    last = (
+    # -----------------------------------------------------
+    # Get Last Admission
+    # -----------------------------------------------------
+
+    last_admission = (
         db.query(Admission)
         .order_by(
             Admission.id.desc()
@@ -184,24 +258,38 @@ def create_admission(
         .first()
     )
 
-    # Next number
-    next_number = (
-        last.id + 1
-        if last
-        else 1
-    )
 
-    # Application number
+    # -----------------------------------------------------
+    # Generate Next Number
+    # -----------------------------------------------------
+
+    if last_admission:
+
+        next_number = (
+            last_admission.id + 1
+        )
+
+    else:
+
+        next_number = 1
+
+
+    # -----------------------------------------------------
+    # Generate Application Number
+    # -----------------------------------------------------
+
+    current_year = datetime.now().year
+
     application_no = (
         f"DSS-ADM-"
-        f"{datetime.now().year}-"
+        f"{current_year}-"
         f"{next_number:04d}"
     )
 
 
-    # =====================================================
-    # CREATE DATABASE RECORD
-    # =====================================================
+    # -----------------------------------------------------
+    # Create Admission Record
+    # -----------------------------------------------------
 
     admission = Admission(
 
@@ -209,20 +297,13 @@ def create_admission(
             application_no,
 
         student_name=
-            admission_data
-            .student_name
-            .strip(),
+            admission_data.student_name.strip(),
 
         father_name=
-            admission_data
-            .father_name
-            .strip(),
+            admission_data.father_name.strip(),
 
         mother_name=
-            (
-                admission_data.mother_name
-                or ""
-            ).strip(),
+            (admission_data.mother_name or "").strip(),
 
         date_of_birth=
             admission_data.date_of_birth,
@@ -231,7 +312,7 @@ def create_admission(
             admission_data.gender,
 
         applying_class=
-            admission_data.applying_class,
+            admission_data.applying_class.strip(),
 
         previous_school=
             (
@@ -245,10 +326,14 @@ def create_admission(
                 or ""
             ).strip(),
 
+        student_cnic=
+            (
+                admission_data.student_cnic
+                or ""
+            ).strip(),
+
         phone=
-            admission_data
-            .phone
-            .strip(),
+            admission_data.phone.strip(),
 
         whatsapp=
             (
@@ -272,9 +357,9 @@ def create_admission(
     )
 
 
-    # =====================================================
-    # SAVE DATABASE FIRST
-    # =====================================================
+    # -----------------------------------------------------
+    # Save Into Database
+    # -----------------------------------------------------
 
     db.add(admission)
 
@@ -283,9 +368,9 @@ def create_admission(
     db.refresh(admission)
 
 
-    # =====================================================
-    # SEND DATA TO N8N
-    # =====================================================
+    # -----------------------------------------------------
+    # Send Notification To n8n
+    # -----------------------------------------------------
 
     webhook_sent = False
 
@@ -324,6 +409,9 @@ def create_admission(
                 "parent_cnic":
                     admission.parent_cnic,
 
+                "student_cnic":
+                    admission.student_cnic,
+
                 "phone":
                     admission.phone,
 
@@ -360,25 +448,24 @@ def create_admission(
             )
 
 
-    except Exception as e:
+    except requests.RequestException as error:
 
         print(
             "⚠️ n8n webhook error:",
-            e
+            error
         )
 
 
-    # =====================================================
-    # RESPONSE TO USER
-    # =====================================================
+    # -----------------------------------------------------
+    # API Response
+    # -----------------------------------------------------
 
     return {
 
         "success": True,
 
         "message":
-            "Admission application "
-            "submitted successfully",
+            "Admission application submitted successfully",
 
         "application_no":
             admission.application_no,
@@ -400,8 +487,29 @@ def create_admission(
 
 @app.get("/api/admissions")
 def get_admissions(
+    request: Request,
     db: Session = Depends(get_db)
 ):
+
+    # -----------------------------------------------------
+    # Admin Authentication
+    # -----------------------------------------------------
+
+    if not admin_is_logged_in(request):
+
+        raise HTTPException(
+
+            status_code=
+                status.HTTP_401_UNAUTHORIZED,
+
+            detail=
+                "Not authenticated as Admin"
+        )
+
+
+    # -----------------------------------------------------
+    # Get Records
+    # -----------------------------------------------------
 
     admissions = (
 
@@ -414,114 +522,198 @@ def get_admissions(
         .all()
     )
 
+
     return admissions
 
 
 # =========================================================
-# ADMIN LOGIN PAGE
+# UPDATE ADMISSION STATUS
 # =========================================================
 
-@app.get("/admin")
-def admin_login_page(
+@app.patch(
+    "/api/admissions/{application_no}"
+)
+def update_admission_status(
+
+    application_no: str,
+
+    status_update: StatusUpdate,
 
     request: Request,
 
     db: Session = Depends(get_db)
-
 ):
 
-    ensure_default_admin(db)
+    # -----------------------------------------------------
+    # Check Admin Login
+    # -----------------------------------------------------
 
+    if not admin_is_logged_in(request):
 
-    if admin_is_logged_in(
-        request
-    ):
+        raise HTTPException(
 
-        return RedirectResponse(
+            status_code=
+                status.HTTP_401_UNAUTHORIZED,
 
-            url="/admin/dashboard",
-
-            status_code=302
+            detail=
+                "Not authenticated as Admin"
         )
 
 
-    return templates.TemplateResponse(
+    # -----------------------------------------------------
+    # Find Admission
+    # -----------------------------------------------------
 
-        request=request,
+    admission = (
 
-        name="admin.html",
-
-        context={
-            "error": None
-        }
-    )
-
-
-# =========================================================
-# ADMIN LOGIN
-# =========================================================
-
-@app.post("/admin/login")
-def admin_login(
-
-    request: Request,
-
-    email: str = Form(...),
-
-    password: str = Form(...),
-
-    db: Session = Depends(get_db)
-
-):
-
-    ensure_default_admin(db)
-
-
-    admin = (
-
-        db.query(Admin)
+        db.query(Admission)
 
         .filter(
-            Admin.email ==
-            email.strip()
+            Admission.application_no
+            == application_no
         )
 
         .first()
     )
 
 
-    if (
-        not admin
-        or
-        admin.password != password
-    ):
+    if not admission:
 
-        return templates.TemplateResponse(
+        raise HTTPException(
 
-            request=request,
+            status_code=404,
 
-            name="admin.html",
-
-            context={
-                "error":
-                    "Invalid email or password"
-            },
-
-            status_code=401
+            detail=
+                "Application record not found"
         )
 
 
-    # Create session token
-    token = secrets.token_urlsafe(32)
+    # -----------------------------------------------------
+    # Validate Status
+    # -----------------------------------------------------
 
-    ADMIN_SESSIONS.add(token)
+    new_status = (
+        status_update.status
+        .strip()
+        .upper()
+    )
 
+
+    allowed_statuses = [
+
+        "PENDING",
+
+        "APPROVED",
+
+        "REJECTED"
+    ]
+
+
+    if new_status not in allowed_statuses:
+
+        raise HTTPException(
+
+            status_code=400,
+
+            detail="Invalid status"
+        )
+
+
+    # -----------------------------------------------------
+    # Update Database
+    # -----------------------------------------------------
+
+    admission.status = new_status
+
+    db.commit()
+
+    db.refresh(admission)
+
+
+    return {
+
+        "success": True,
+
+        "application_no":
+            admission.application_no,
+
+        "new_status":
+            admission.status
+    }
+
+
+# =========================================================
+# ADMIN LOGIN
+# =========================================================
+
+@app.post("/api/admin/login")
+def admin_login(
+
+    email: str = Form(...),
+
+    password: str = Form(...),
+
+    db: Session = Depends(get_db)
+):
+
+    # -----------------------------------------------------
+    # Find Admin
+    # -----------------------------------------------------
+
+    admin = (
+
+        db.query(Admin)
+
+        .filter(
+            Admin.email == email.strip()
+        )
+
+        .first()
+    )
+
+
+    # -----------------------------------------------------
+    # Validate Login
+    # -----------------------------------------------------
+
+    if (
+        not admin
+        or admin.password != password
+    ):
+
+        raise HTTPException(
+
+            status_code=
+                status.HTTP_401_UNAUTHORIZED,
+
+            detail=
+                "Invalid email or password"
+        )
+
+
+    # -----------------------------------------------------
+    # Create Session
+    # -----------------------------------------------------
+
+    session_token = (
+        secrets.token_hex(32)
+    )
+
+    ADMIN_SESSIONS.add(
+        session_token
+    )
+
+
+    # -----------------------------------------------------
+    # Redirect To Homepage
+    # -----------------------------------------------------
 
     response = RedirectResponse(
 
-        url="/admin/dashboard",
+        url="/",
 
-        status_code=302
+        status_code=
+            status.HTTP_303_SEE_OTHER
     )
 
 
@@ -529,7 +721,7 @@ def admin_login(
 
         key="admin_session",
 
-        value=token,
+        value=session_token,
 
         httponly=True,
 
@@ -541,243 +733,10 @@ def admin_login(
 
 
 # =========================================================
-# ADMIN DASHBOARD
-# =========================================================
-
-@app.get("/admin/dashboard")
-def admin_dashboard(
-
-    request: Request,
-
-    db: Session = Depends(get_db)
-
-):
-
-    if not admin_is_logged_in(
-        request
-    ):
-
-        return RedirectResponse(
-
-            url="/admin",
-
-            status_code=302
-        )
-
-
-    admissions = (
-
-        db.query(Admission)
-
-        .order_by(
-            Admission.id.desc()
-        )
-
-        .all()
-    )
-
-
-    total = len(
-        admissions
-    )
-
-
-    pending = sum(
-
-        1
-
-        for a in admissions
-
-        if a.status == "PENDING"
-
-    )
-
-
-    approved = sum(
-
-        1
-
-        for a in admissions
-
-        if a.status == "APPROVED"
-
-    )
-
-
-    rejected = sum(
-
-        1
-
-        for a in admissions
-
-        if a.status == "REJECTED"
-
-    )
-
-
-    return templates.TemplateResponse(
-
-        request=request,
-
-        name="dashboard.html",
-
-        context={
-
-            "admissions":
-                admissions,
-
-            "total":
-                total,
-
-            "pending":
-                pending,
-
-            "approved":
-                approved,
-
-            "rejected":
-                rejected
-        }
-    )
-
-
-# =========================================================
-# APPROVE ADMISSION
-# =========================================================
-
-@app.post(
-    "/admin/admissions/{admission_id}/approve"
-)
-def approve_admission(
-
-    admission_id: int,
-
-    request: Request,
-
-    db: Session = Depends(get_db)
-
-):
-
-    if not admin_is_logged_in(
-        request
-    ):
-
-        return RedirectResponse(
-
-            url="/admin",
-
-            status_code=302
-        )
-
-
-    admission = (
-
-        db.query(Admission)
-
-        .filter(
-            Admission.id ==
-            admission_id
-        )
-
-        .first()
-    )
-
-
-    if not admission:
-
-        raise HTTPException(
-
-            status_code=404,
-
-            detail=
-                "Admission not found"
-        )
-
-
-    admission.status = "APPROVED"
-
-    db.commit()
-
-
-    return RedirectResponse(
-
-        url="/admin/dashboard",
-
-        status_code=302
-    )
-
-
-# =========================================================
-# REJECT ADMISSION
-# =========================================================
-
-@app.post(
-    "/admin/admissions/{admission_id}/reject"
-)
-def reject_admission(
-
-    admission_id: int,
-
-    request: Request,
-
-    db: Session = Depends(get_db)
-
-):
-
-    if not admin_is_logged_in(
-        request
-    ):
-
-        return RedirectResponse(
-
-            url="/admin",
-
-            status_code=302
-        )
-
-
-    admission = (
-
-        db.query(Admission)
-
-        .filter(
-            Admission.id ==
-            admission_id
-        )
-
-        .first()
-    )
-
-
-    if not admission:
-
-        raise HTTPException(
-
-            status_code=404,
-
-            detail=
-                "Admission not found"
-        )
-
-
-    admission.status = "REJECTED"
-
-    db.commit()
-
-
-    return RedirectResponse(
-
-        url="/admin/dashboard",
-
-        status_code=302
-    )
-
-
-# =========================================================
 # ADMIN LOGOUT
 # =========================================================
 
-@app.get("/admin/logout")
+@app.get("/api/admin/logout")
 def admin_logout(
     request: Request
 ):
@@ -787,23 +746,27 @@ def admin_logout(
     )
 
 
-    if token:
+    if (
+        token
+        and token in ADMIN_SESSIONS
+    ):
 
-        ADMIN_SESSIONS.discard(
+        ADMIN_SESSIONS.remove(
             token
         )
 
 
     response = RedirectResponse(
 
-        url="/admin",
+        url="/",
 
-        status_code=302
+        status_code=
+            status.HTTP_303_SEE_OTHER
     )
 
 
     response.delete_cookie(
-        "admin_session"
+        key="admin_session"
     )
 
 
